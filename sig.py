@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+import bottleneck as bn
 
 # https://bbs.archlinux.org/viewtopic.php?id=157992
 # http://code.opencv.org/issues/2211
@@ -18,6 +19,9 @@ def GenerateSignature(fname):
     h = []
     cb = []
     cd = []
+
+    xres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+    yres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 
     bins = np.linspace(0,255,num=17)[1:]
     while True:
@@ -43,9 +47,10 @@ def GenerateSignature(fname):
 
         frame = np.sum(frame, axis=2)
 
-        # TOFIX: these are the 5% brightest pixel values, not 5% brightest pixels
-        cb.append(np.mean(np.nonzero(frame > 0.95*255), axis=1))
-        cd.append(np.mean(np.nonzero(frame < 0.05*255), axis=1))
+        n = int(xres*yres*0.95)
+        partsorted_frame = zip(*np.unravel_index(bn.argpartsort(frame.flatten(),n), [xres, yres]))
+        cb.append(np.mean(partsorted_frame[n:],axis=0))
+        cd.append(np.mean(partsorted_frame[:int(xres*yres*.05)],axis=0))
 
 
     print("done")
@@ -56,8 +61,6 @@ def GenerateSignature(fname):
 
     # normalize histogram by resolution
     # cast hist_l1n to ints for sig
-    xres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
-    yres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
     hist_l1n = hist_l1 / np.sqrt(xres*yres)
 
     # 10*mean seems to work well...
@@ -66,10 +69,7 @@ def GenerateSignature(fname):
     # centroid movements
     cb_m = np.sqrt(np.sum(np.square(np.absolute(np.diff(cb, axis=0))), 1))/np.sqrt(xres*yres)
     cd_m = np.sqrt(np.sum(np.square(np.absolute(np.diff(cd, axis=0))), 1))/np.sqrt(xres*yres)
-
     c_m = cb_m + cd_m
-
-    return [boundaries, hist_l1n, c_m]
 
     # t1 = np.arange(len(hist_l1n))/23.967
     # t2 = np.arange(len(c_m))/23.967
@@ -80,13 +80,12 @@ def GenerateSignature(fname):
     # plt.plot(t2, c_m)
     # plt.show()
 
-
     # for i in range(frames.shape[-1]):
     #     cv2.imshow('im1', frames[...,i])
     #     cv2.waitKey(20)
 
     vid.release()
-
+    return [boundaries, hist_l1n, c_m]
     # print(frames.shape)
 
 def CombineSignature(colorshift_sig, centroid_sig):

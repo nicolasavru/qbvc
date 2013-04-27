@@ -30,7 +30,7 @@ def add(database, queryclip):
     sig = GenerateSignature(queryclip)
     sig_combined = CombineSignature(sig[1],sig[2])
     writer = csv.writer(dbfile, delimiter=";")
-    writer.writerow(';'.join([sig_combined, queryclip]))
+    writer.writerow([sig_combined, queryclip])
     dbfile.close()
 
 
