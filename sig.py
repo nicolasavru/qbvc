@@ -88,13 +88,19 @@ def GenerateSignature(fname):
     return [boundaries, hist_l1n, c_m]
     # print(frames.shape)
 
+# CombineSignature - Combines the colorshift and centroid to product 1 signature
+# colorshift_sig: An array of floats depicting the shifts in color in successive frames
+# centroid_sig: An array of floats depicting the centroid of each frame
+# Returns a list of combined signature interweaving 2 inputs
 def CombineSignature(colorshift_sig, centroid_sig):
     """
     Returns the np arrays colorshift_sig and centroid_sig interleaved.
     """
     # TODO: strip off brackets, etc.
-    return ''.join([''.join(c).strip() for c in zip(str(colorshift_sig.tolist()),
-                                             str(centroid_sig.tolist()))])
+    combined_result = [None]*(len(colorshift_sig)+len(centroid_sig))
+    combined_result[::2] = colorshift_sig.tolist()
+    combined_result[1::2] = colorshift_sig.tolist()
+    return combined_result # Returns list now, we can convert to string later
 
 
 def CompareSignature(sig1, sig2):
