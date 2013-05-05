@@ -24,9 +24,15 @@ def GenerateSignature(fname):
     yres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 
     bins = np.linspace(0,255,num=17)[1:]
+    downsample_number = 10
     while True:
-        ret,im = vid.read()
-        if not ret or len(h) > 50:
+
+        # Can downsample the frames to only comput signature once every 10 frames
+        for i in range(0,downsample_number):
+            ret,im = vid.read()
+            if not ret:
+                break
+        if not ret:
             break
 
         print(len(h))
@@ -38,16 +44,19 @@ def GenerateSignature(fname):
         #           np.histogram(frame[...,2], bins=16, range=[0, 255])[0]])
 
         # ~35% speed increase
-        h.append([np.bincount(np.digitize(frame[...,0].flatten(),
-            bins, right=True),minlength=16),
-            np.bincount(np.digitize(frame[...,1].flatten(),
-                bins, right=True), minlength=16),
-            np.bincount(np.digitize(frame[...,2].flatten(),
-                bins, right=True), minlength=16)])
+        #h.append([np.bincount(np.digitize(frame[...,0].flatten(),
+            #bins, right=True),minlength=16),
+            #np.bincount(np.digitize(frame[...,1].flatten(),
+                #bins, right=True), minlength=16),
+            #np.bincount(np.digitize(frame[...,2].flatten(),
+                #bins, right=True), minlength=16)])
+        h.append(histogram(frame, bins))
 
         frame = np.sum(frame, axis=2)
 
         n = int(xres*yres*0.95)
+
+        # These 3 lines are the bottleneck
         partsorted_frame = zip(*np.unravel_index(bn.argpartsort(frame.flatten(),n), [xres, yres]))
         cb.append(np.mean(partsorted_frame[n:],axis=0))
         cd.append(np.mean(partsorted_frame[:int(xres*yres*.05)],axis=0))
@@ -87,6 +96,18 @@ def GenerateSignature(fname):
     vid.release()
     return [boundaries, hist_l1n, c_m]
     # print(frames.shape)
+
+def histogram(frame, bins):
+    """
+    Returns the historgram of the 3 channels of the frame
+    """
+    return ([np.bincount(np.digitize(frame[...,0].flatten(),
+        bins, right=True),minlength=16),
+        np.bincount(np.digitize(frame[...,1].flatten(),
+            bins, right=True), minlength=16),
+        np.bincount(np.digitize(frame[...,2].flatten(),
+            bins, right=True), minlength=16)])
+
 
 # CombineSignature - Combines the colorshift and centroid to product 1 signature
 # colorshift_sig: An array of floats depicting the shifts in color in successive frames
