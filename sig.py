@@ -26,7 +26,7 @@ def GenerateSignature(fname):
     bins = np.linspace(0,255,num=17)[1:]
     while True:
         ret,im = vid.read()
-        if not ret:
+        if not ret or len(h) > 50:
             break
 
         print(len(h))
@@ -91,7 +91,7 @@ def GenerateSignature(fname):
 # CombineSignature - Combines the colorshift and centroid to product 1 signature
 # colorshift_sig: An array of floats depicting the shifts in color in successive frames
 # centroid_sig: An array of floats depicting the centroid of each frame
-# Returns a list of combined signature interweaving 2 inputs
+# Returns a comma delimited string of the combined signature interweaving 2 inputs
 def CombineSignature(colorshift_sig, centroid_sig):
     """
     Returns the np arrays colorshift_sig and centroid_sig interleaved.
@@ -100,7 +100,7 @@ def CombineSignature(colorshift_sig, centroid_sig):
     combined_result = [None]*(len(colorshift_sig)+len(centroid_sig))
     combined_result[::2] = colorshift_sig.tolist()
     combined_result[1::2] = centroid_sig.tolist()
-    return combined_result # Returns list now, we can convert to string later
+    return ','.join(map(str,combined_result))
 
 
 def CompareSignature(sig1, sig2):
