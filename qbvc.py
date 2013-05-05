@@ -15,7 +15,7 @@ def search(database, queryclip):
     dbfile = open(database, 'r')
     reader = csv.reader(dbfile, delimiter=';')
     for row in reader:
-        if CompareSignature(sig_combined, row[0]):
+        if CompareSignature(','.join(map(str,sig_combined)), row[0]):
             result.append(row)
 
     dbfile.close()
@@ -28,9 +28,9 @@ def add(database, queryclip):
 
     dbfile = open(database, 'a')
     sig = GenerateSignature(queryclip)
-    sig_combined = CombineSignature(sig[1],sig[2])
+    sig_combined = str(CombineSignature(sig[1],sig[2]))
     writer = csv.writer(dbfile, delimiter=";")
-    writer.writerow([sig_combined, queryclip])
+    writer.writerow([','.join(map(str,sig_combined)), queryclip])
     dbfile.close()
 
 

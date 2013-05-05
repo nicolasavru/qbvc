@@ -99,7 +99,7 @@ def CombineSignature(colorshift_sig, centroid_sig):
     # TODO: strip off brackets, etc.
     combined_result = [None]*(len(colorshift_sig)+len(centroid_sig))
     combined_result[::2] = colorshift_sig.tolist()
-    combined_result[1::2] = colorshift_sig.tolist()
+    combined_result[1::2] = centroid_sig.tolist()
     return combined_result # Returns list now, we can convert to string later
 
 
