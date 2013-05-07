@@ -27,6 +27,7 @@ def GenerateSignature(fname, demo=False):
 
     bins = np.linspace(0,255,num=17)[1:]
     downsample_number = 1
+    secs = 0
     while True:
 
         # Can downsample the frames to only comput signature once every 10 frames
@@ -37,7 +38,10 @@ def GenerateSignature(fname, demo=False):
         if not ret:
             break
 
-        print(len(h))
+        if ((len(h)+1) % 30 == 0):
+            secs += 1
+            s = '...Processed ' + str(secs) + ' seconds of video'
+            print(s)
         frame = im
 
         # histogram is slow
@@ -57,23 +61,27 @@ def GenerateSignature(fname, demo=False):
         frame = np.sum(frame, axis=2)
 
         if demo and len(h) > 0:
+            #plt.ion()
             width = 10
             pic_frame = cv2.cvtColor(im,cv2.cv.CV_BGR2RGB)
             f, (ax1) = plt.subplots(1,1)
             ax1.imshow(pic_frame)
             ax1.set_title('Video Frame')
+            ax1.figure.canvas.draw() 
             f, (ax1, ax2, ax3) = plt.subplots(1,3, sharey=True)
             ax1.bar(bins, h[-1][2], width=width, color='r')
             ax1.set_title('Red Color Histogram')
             ax1.set_xlabel('Red Value Bins')
-            ax1.set_ylabel('Pixel Number')
+            ax1.set_ylabel('Pixel Nrmber')
+            ax1.figure.canvas.draw()
             ax2.bar(bins, h[-1][1], width=width, color='g')
             ax2.set_title('Green Color Histogram')
             ax2.set_xlabel('Green Value Bins')
+            ax2.figure.canvas.draw()
             ax3.bar(bins, h[-1][0], width=width, color='b')
             ax3.set_title('Blue Color Histogram')
             ax3.set_xlabel('Blue Value Bins')
-            
+            ax3.figure.canvas.draw()
             plt.show()
             demo = False
 
@@ -195,7 +203,7 @@ def CompareSignature(sig1, sig2, cost_func=CostFunction, demo=False):
         n += 1
 
     if demo:
-        print "Best Match Determined to be at", round(float(min_index/2)/30), "seconds into video"
+        print "Best Match Determined to be at", round(float(min_index/2)/29.97), "seconds into video"
         
     return costs
 

@@ -2,6 +2,7 @@
 
 import sys
 import csv
+import matplotlib.pyplot as plt
 
 from sig import *
 
@@ -56,3 +57,5 @@ if __name__ == "__main__":
         demo = True
 
     commands[command](database, queryclip)
+    if demo:
+        plt.show()
