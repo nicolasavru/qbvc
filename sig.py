@@ -3,6 +3,7 @@
 import cv2
 import numpy as np
 import bottleneck as bn
+from itertools import tee, izip
 
 # https://bbs.archlinux.org/viewtopic.php?id=157992
 # http://code.opencv.org/issues/2211
@@ -10,11 +11,12 @@ import bottleneck as bn
 
 import matplotlib.pyplot as plt
 
-def GenerateSignature(fname):
+def GenerateSignature(fname, demo=False):
     """
     Returns [shotlen_sig, colorshift_sig, centroid_cig] of fname.
     """
     vid = cv2.VideoCapture(fname)
+    #vid.set(cv2.cv.CV_CAP_PROP_CONVERT_RGB,1)
 
     h = []
     cb = []
@@ -24,7 +26,7 @@ def GenerateSignature(fname):
     yres = vid.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
 
     bins = np.linspace(0,255,num=17)[1:]
-    downsample_number = 10
+    downsample_number = 1
     while True:
 
         # Can downsample the frames to only comput signature once every 10 frames
@@ -53,6 +55,27 @@ def GenerateSignature(fname):
         h.append(histogram(frame, bins))
 
         frame = np.sum(frame, axis=2)
+
+        if demo and len(h) > 0:
+            width = 10
+            pic_frame = cv2.cvtColor(im,cv2.cv.CV_BGR2RGB)
+            f, (ax1) = plt.subplots(1,1)
+            ax1.imshow(pic_frame)
+            ax1.set_title('Video Frame')
+            f, (ax1, ax2, ax3) = plt.subplots(1,3, sharey=True)
+            ax1.bar(bins, h[-1][2], width=width, color='r')
+            ax1.set_title('Red Color Histogram')
+            ax1.set_xlabel('Red Value Bins')
+            ax1.set_ylabel('Pixel Number')
+            ax2.bar(bins, h[-1][1], width=width, color='g')
+            ax2.set_title('Green Color Histogram')
+            ax2.set_xlabel('Green Value Bins')
+            ax3.bar(bins, h[-1][0], width=width, color='b')
+            ax3.set_title('Blue Color Histogram')
+            ax3.set_xlabel('Blue Value Bins')
+            
+            plt.show()
+            demo = False
 
         n = int(xres*yres*0.95)
 
@@ -123,9 +146,56 @@ def CombineSignature(colorshift_sig, centroid_sig):
     combined_result[1::2] = centroid_sig.tolist()
     return ','.join(map(str,combined_result))
 
+def CostFunction(weighted_difference):
+    """
+    Computes the cost of the weighted difference
+    """
+    return weighted_difference
 
-def CompareSignature(sig1, sig2):
+def SlideWindow(a, stepsize=1, width=3):
+    #shape = a.shape[:-1] + (a.shape[-1] - width + 1, width)
+    #strides = a.strides + (a.strides[-1],)
+    #return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+    shape = a.shape[:-1] + (a.shape[-1] - width + 1, width)
+    strides = a.strides + (a.strides[-1],)
+    return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
+def CompareSignature(sig1, sig2, cost_func=CostFunction, demo=False):
     """
     Compares sig1 and sig2. Returns True of they match and False otherwise.
     """
-    return True
+    window_size_factor = 1
+
+    db_vid_sig = np.asarray([float(n) for n in sig2.split(',')])
+    query_vid_sig = np.asarray([float(n) for n in sig1.split(',')])
+    
+    #If window_size_factor can produce non multiple of 2 in window size must fix this
+    window_size = int(len(query_vid_sig)*window_size_factor)
+
+    k = 1
+    n = 0
+
+    costs = [0] * len(db_vid_sig)
+    cost_tuple = [(0,0)] * (len(db_vid_sig)/2)
+    min_index = 0
+    min_cost = -1
+
+    cur_sum_costs = 0
+
+    windows = SlideWindow(db_vid_sig, 2, window_size)
+
+    for window in windows:
+        window = np.asarray(window)
+        costs[n] = np.sum(CostFunction(k*np.absolute(np.subtract(window,query_vid_sig))))
+        if costs[n] < min_cost or min_cost == -1:
+            min_cost = costs[n]
+            min_index = n
+            if demo:
+                print n, costs[n]
+        n += 1
+
+    if demo:
+        print "Best Match Determined to be at", round(float(min_index/2)/30), "seconds into video"
+        
+    return costs
+
