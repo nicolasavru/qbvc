@@ -30,7 +30,7 @@ def GenerateSignature(fname, demo=False):
     secs = 0
     while True:
 
-        # Can downsample the frames to only comput signature once every 10 frames
+        # Can downsample the frames to only comput signature once every k frames
         for i in range(0,downsample_number):
             ret,im = vid.read()
             if not ret:
@@ -44,23 +44,11 @@ def GenerateSignature(fname, demo=False):
             print(s)
         frame = im
 
-        # histogram is slow
-        # h.append([np.histogram(frame[...,0], bins=16, range=[0, 255])[0],
-        #           np.histogram(frame[...,1], bins=16, range=[0, 255])[0],
-        #           np.histogram(frame[...,2], bins=16, range=[0, 255])[0]])
-
-        # ~35% speed increase
-        #h.append([np.bincount(np.digitize(frame[...,0].flatten(),
-            #bins, right=True),minlength=16),
-            #np.bincount(np.digitize(frame[...,1].flatten(),
-                #bins, right=True), minlength=16),
-            #np.bincount(np.digitize(frame[...,2].flatten(),
-                #bins, right=True), minlength=16)])
         h.append(histogram(frame, bins))
 
         frame = np.sum(frame, axis=2)
 
-        if demo and len(h) > 0:
+        if demo and len(h) > 100:
             #plt.ion()
             width = 10
             pic_frame = cv2.cvtColor(im,cv2.cv.CV_BGR2RGB)
@@ -87,10 +75,11 @@ def GenerateSignature(fname, demo=False):
 
         n = int(xres*yres*0.95)
 
-        # These 3 lines are the bottleneck
-        partsorted_frame = zip(*np.unravel_index(bn.argpartsort(frame.flatten(),n), [xres, yres]))
-        cb.append(np.mean(partsorted_frame[n:],axis=0))
-        cd.append(np.mean(partsorted_frame[:int(xres*yres*.05)],axis=0))
+        partsorted_frame = np.unravel_index(bn.argpartsort(frame.flatten(),n), [xres, yres])
+        cb.append((np.mean(partsorted_frame[0][n:]),
+                   np.mean(partsorted_frame[1][n:])))
+        cd.append((np.mean(partsorted_frame[0][:int(xres*yres*.05)]),
+                   np.mean(partsorted_frame[1][:int(xres*yres*.05)])))
 
 
     print("done")
@@ -132,6 +121,11 @@ def histogram(frame, bins):
     """
     Returns the historgram of the 3 channels of the frame
     """
+    # np.histogram is slow
+    # return ([np.histogram(frame[...,0], bins=16, range=[0, 255])[0],
+    #          np.histogram(frame[...,1], bins=16, range=[0, 255])[0],
+    #          np.histogram(frame[...,2], bins=16, range=[0, 255])[0]])
+
     return ([np.bincount(np.digitize(frame[...,0].flatten(),
         bins, right=True),minlength=16),
         np.bincount(np.digitize(frame[...,1].flatten(),
