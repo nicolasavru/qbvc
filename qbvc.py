@@ -19,10 +19,17 @@ def search(database, queryclip):
     reader = csv.reader(dbfile, delimiter=';')
     result = []
     for row in reader:
-        if CompareSignature(sig_combined, row[0], demo=demo):
-            result.append(row)
+        matches = CompareSignature(sig_combined, row[0],
+                                   score_func=scorefuncs.MeanWeightedScoreFunction,
+                                   demo=demo)
+        if matches:
+            result.append((row[1],
+                           [((match[0]/2.0)/29.976, match[1]) for match in matches]))
 
     dbfile.close()
+
+    print result
+
     return result
 
 def add(database, queryclip):

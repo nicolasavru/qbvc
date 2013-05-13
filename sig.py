@@ -158,33 +158,41 @@ def SlideWindow(a, stepsize=1, width=3):
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
 
-def CompareSignature(sig1, sig2, score_func=scorefuncs.LinearScoreFunction, demo=False):
+def CompareSignature(sig1, sig2,
+                     score_func=scorefuncs.MeanWeightedScoreFunction,
+                     demo=False):
     """
-    Compares sig1 and sig2. Returns True of they match and False otherwise.
+    Compares sig1 and sig2. Returns a list of matches.
     """
     window_size_factor = 1
 
     db_vid_sig = np.asarray([float(n) for n in sig2.split(',')])
     query_vid_sig = np.asarray([float(n) for n in sig1.split(',')])
-    
+
     #If window_size_factor can produce non multiple of 2 in window size must fix this
     window_size = int(len(query_vid_sig)*window_size_factor)
 
     k = 1
     n = 0
+    T = 0
 
     scores = [0] * len(db_vid_sig)
     score_tuple = [(0,0)] * (len(db_vid_sig)/2)
     max_index = 0
     max_score = -1
+    matches = []
 
     cur_sum_score = 0
 
+    qmean = np.mean(query_vid_sig)
     windows = SlideWindow(db_vid_sig, 2, window_size)
 
     for window in windows:
         window = np.asarray(window)
-        scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig))))
+        scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig)), qmean))
+        if scores[n] > T:
+            matches.append((n, scores[n]))
+
         if scores[n] > max_score or max_score == -1:
             max_score = scores[n]
             max_index = n
@@ -193,7 +201,10 @@ def CompareSignature(sig1, sig2, score_func=scorefuncs.LinearScoreFunction, demo
         n += 1
 
     if demo:
-        print "Best Match Determined to be at", round(float(max_index/2)/29.97), "seconds into video"
-        
-    return scores
+        if max_score > T:
+            print "Best match determined to be at", round(float(max_index/2)/29.97), "seconds into video."
+        else:
+            print "Not a match."
+
+    return matches
 
