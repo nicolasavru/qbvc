@@ -5,6 +5,8 @@ import numpy as np
 import bottleneck as bn
 from itertools import tee, izip
 
+import scorefuncs
+
 # https://bbs.archlinux.org/viewtopic.php?id=157992
 # http://code.opencv.org/issues/2211
 # cv2.namedWindow("im1", cv2.CV_WINDOW_AUTOSIZE)
@@ -148,12 +150,6 @@ def CombineSignature(colorshift_sig, centroid_sig):
     combined_result[1::2] = centroid_sig.tolist()
     return ','.join(map(str,combined_result))
 
-def CostFunction(weighted_difference):
-    """
-    Computes the cost of the weighted difference
-    """
-    return weighted_difference
-
 def SlideWindow(a, stepsize=1, width=3):
     #shape = a.shape[:-1] + (a.shape[-1] - width + 1, width)
     #strides = a.strides + (a.strides[-1],)
@@ -162,7 +158,7 @@ def SlideWindow(a, stepsize=1, width=3):
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
 
-def CompareSignature(sig1, sig2, cost_func=CostFunction, demo=False):
+def CompareSignature(sig1, sig2, score_func=scorefuncs.LinearScoreFunction, demo=False):
     """
     Compares sig1 and sig2. Returns True of they match and False otherwise.
     """
@@ -177,27 +173,27 @@ def CompareSignature(sig1, sig2, cost_func=CostFunction, demo=False):
     k = 1
     n = 0
 
-    costs = [0] * len(db_vid_sig)
-    cost_tuple = [(0,0)] * (len(db_vid_sig)/2)
-    min_index = 0
-    min_cost = -1
+    scores = [0] * len(db_vid_sig)
+    score_tuple = [(0,0)] * (len(db_vid_sig)/2)
+    max_index = 0
+    max_score = -1
 
-    cur_sum_costs = 0
+    cur_sum_score = 0
 
     windows = SlideWindow(db_vid_sig, 2, window_size)
 
     for window in windows:
         window = np.asarray(window)
-        costs[n] = np.sum(CostFunction(k*np.absolute(np.subtract(window,query_vid_sig))))
-        if costs[n] < min_cost or min_cost == -1:
-            min_cost = costs[n]
-            min_index = n
+        scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig))))
+        if scores[n] > max_score or max_score == -1:
+            max_score = scores[n]
+            max_index = n
             if demo:
-                print n, costs[n]
+                print n, scores[n]
         n += 1
 
     if demo:
-        print "Best Match Determined to be at", round(float(min_index/2)/29.97), "seconds into video"
+        print "Best Match Determined to be at", round(float(max_index/2)/29.97), "seconds into video"
         
-    return costs
+    return scores
 

@@ -4,6 +4,7 @@ import sys
 import csv
 
 from sig import *
+import scorefuncs
 
 csv.field_size_limit(sys.maxsize)
 
