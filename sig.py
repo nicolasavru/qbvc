@@ -179,7 +179,7 @@ def CompareSignature(sig1, sig2,
     score_tuple = [(0,0)] * (len(db_vid_sig)/2)
     max_index = 0
     max_score = -1
-    matches = []
+    matches = {}
 
     cur_sum_score = 0
 
@@ -190,7 +190,9 @@ def CompareSignature(sig1, sig2,
         window = np.asarray(window)
         scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig)), qmean))
         if scores[n] > T:
-            matches.append((scores[n], n))
+            if round(float(max_index/2)/29.97) not in matches or scores[n] > matches[round(float(max_index/2)/29.97)]:
+                matches[round(float(max_index/2)/29.97)] = scores[n]
+            # matches.append((scores[n], n))
 
         if scores[n] > max_score or max_score == -1:
             max_score = scores[n]
@@ -204,7 +206,10 @@ def CompareSignature(sig1, sig2,
             print "Best match determined to be at", round(float(max_index/2)/29.97), "seconds into video."
         else:
             print "Not a match."
-    matches.sort()
 
-    return matches[-N:]
+    matcheslist = zip(matches.values(), matches.keys())
+
+    matcheslist.sort()
+    print(matcheslist)
+    return matcheslist[-N:]
 
