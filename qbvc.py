@@ -20,7 +20,7 @@ def search(database, queryclip):
     result = []
     for row in reader:
         matches = CompareSignature(sig_combined, row[0],
-                                   score_func=scorefuncs.MeanWeightedScoreFunction,
+                                   score_func=scorefunc,
                                    demo=demo)
         if matches:
             result.append((row[1],
@@ -51,6 +51,13 @@ commands = {
     "add" : add,
     }
 
+scorefuncdict = {
+    "linear" : scorefuncs.LinearScoreFunction,
+    "cubic" : scorefuncs.CubicScoreFunction,
+    "mean-weighted" : scorefuncs.MeanWeightedScoreFunction
+    }
+scorefunc = scorefuncs.CubicScoreFunction
+
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Usage: ./gbvc.py database queryclip command")
@@ -60,7 +67,10 @@ if __name__ == "__main__":
     database = sys.argv[1]
     queryclip = sys.argv[2]
     command = sys.argv[3]
-    if len(sys.argv) == 5 and sys.argv[4] == "demo":
+    if command == "search":
+        scorefunc = scorefuncdict[sys.argv[4]]
+
+    if sys.argv[-1] == "demo":
         demo = True
 
     commands[command](database, queryclip)
