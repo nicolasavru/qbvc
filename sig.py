@@ -178,7 +178,7 @@ def CompareSignature(sig1, sig2,
     scores = [0] * len(db_vid_sig)
     score_tuple = [(0,0)] * (len(db_vid_sig)/2)
     max_index = 0
-    max_score = -1
+    max_score = False
     matches = {}
 
     cur_sum_score = 0
@@ -189,11 +189,11 @@ def CompareSignature(sig1, sig2,
     for window in windows:
         window = np.asarray(window)
         scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig)), qmean))
-        if round(float(max_index/2)/29.97) not in matches or scores[n] > matches[round(float(max_index/2)/29.97)]:
-                matches[round(float(max_index/2)/29.97)] = scores[n]
+        if round(float(n/2)/29.97) not in matches.keys() or scores[n] > matches[round(float(n/2)/29.97)]:
+                matches[round(float(n/2)/29.97)] = scores[n]
             # matches.append((scores[n], n))
 
-        if scores[n] > max_score or max_score == -1:
+        if scores[n] > max_score or max_score == False:
             max_score = scores[n]
             max_index = n
             if demo:
