@@ -50,13 +50,19 @@ and some nice color-shift histograms.
 
 ### Example ###
 1. Create a database file and add a video file to it:
-    python2 qbvc.py database.db video1.mkv add
+```
+python2 qbvc.py database.db video1.mkv add
+```
 
 Or, add a directory tree of files:
+```
     find . -name '*.mkv' -exec python2 qbvc.py database.db {} add \;
+```
 
 2. Search for the source of a video file in the database:
+```
     python2 qbvc.py database.db video_clip.mkv search cubic
+```
 
 A good video clip to search for is a segment extracted from one of the
 videos in the database. An easy way to extract a clip like that is with HandBrake [3]
