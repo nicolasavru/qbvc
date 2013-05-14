@@ -45,10 +45,11 @@ def GenerateSignature(fname, demo=False):
             s = '...Processed ' + str(secs) + ' seconds of video'
             print(s)
         frame = im
+        frame = cv2.cvtColor(im,cv2.cv.CV_BGR2Lab)
 
         h.append(histogram(frame, bins))
 
-        frame = np.sum(frame, axis=2)
+        lframe = frame[...,0]
 
         if demo and len(h) > 100:
             #plt.ion()
@@ -59,30 +60,29 @@ def GenerateSignature(fname, demo=False):
             ax1.set_title('Video Frame')
             ax1.figure.canvas.draw() 
             f, (ax1, ax2, ax3) = plt.subplots(1,3, sharey=True)
-            ax1.bar(bins, h[-1][2], width=width, color='r')
-            ax1.set_title('Red Color Histogram')
-            ax1.set_xlabel('Red Value Bins')
-            ax1.set_ylabel('Pixel Nrmber')
+            ax1.bar(bins, h[-1][0], width=width, color='r')
+            ax1.set_title('L Histogram')
+            ax1.set_xlabel('L Value Bins')
+            ax1.set_ylabel('Pixel Number')
             ax1.figure.canvas.draw()
             ax2.bar(bins, h[-1][1], width=width, color='g')
-            ax2.set_title('Green Color Histogram')
-            ax2.set_xlabel('Green Value Bins')
+            ax2.set_title('a* Histogram')
+            ax2.set_xlabel('a* Value Bins')
             ax2.figure.canvas.draw()
-            ax3.bar(bins, h[-1][0], width=width, color='b')
-            ax3.set_title('Blue Color Histogram')
-            ax3.set_xlabel('Blue Value Bins')
+            ax3.bar(bins, h[-1][2], width=width, color='b')
+            ax3.set_title('b* Histogram')
+            ax3.set_xlabel('b* Value Bins')
             ax3.figure.canvas.draw()
             plt.show()
             demo = False
 
         n = int(xres*yres*0.95)
 
-        partsorted_frame = np.unravel_index(bn.argpartsort(frame.flatten(),n), [xres, yres])
+        partsorted_frame = np.unravel_index(bn.argpartsort(lframe.flatten(),n), [xres, yres])
         cb.append((np.mean(partsorted_frame[0][n:]),
                    np.mean(partsorted_frame[1][n:])))
         cd.append((np.mean(partsorted_frame[0][:int(xres*yres*.05)]),
                    np.mean(partsorted_frame[1][:int(xres*yres*.05)])))
-
 
     print("done")
 
@@ -121,7 +121,7 @@ def GenerateSignature(fname, demo=False):
 
 def histogram(frame, bins):
     """
-    Returns the historgram of the 3 channels of the frame
+    Returns the histogram of the 3 channels of the frame.
     """
     # np.histogram is slow
     # return ([np.histogram(frame[...,0], bins=16, range=[0, 255])[0],
