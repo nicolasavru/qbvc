@@ -206,6 +206,4 @@ def CompareSignature(sig1, sig2,
     matcheslist = zip(matches.values(), matches.keys())
 
     matcheslist.sort()
-    print(matcheslist)
     return matcheslist[-N:]
-
