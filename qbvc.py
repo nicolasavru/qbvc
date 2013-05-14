@@ -28,7 +28,7 @@ def search(database, queryclip):
                                    score_func=scorefunc,
                                    demo=demo, N=num_returned)
         if matches:
-            cur_result = [(match[0], (match[1]/2.0)/29.976, row[1]) for match in matches]
+            cur_result = [(match[0], match[1], row[1]) for match in matches]
             result = list(heapq.merge(result,cur_result))
 
     dbfile.close()
