@@ -160,7 +160,7 @@ def SlideWindow(a, stepsize=1, width=3):
 
 def CompareSignature(sig1, sig2,
                      score_func=scorefuncs.MeanWeightedScoreFunction,
-                     demo=False):
+                     demo=False, T=0, N=10):
     """
     Compares sig1 and sig2. Returns a list of matches.
     """
@@ -174,7 +174,6 @@ def CompareSignature(sig1, sig2,
 
     k = 1
     n = 0
-    T = 0
 
     scores = [0] * len(db_vid_sig)
     score_tuple = [(0,0)] * (len(db_vid_sig)/2)
