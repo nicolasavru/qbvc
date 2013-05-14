@@ -23,6 +23,8 @@ def search(database, queryclip):
     result = []
     T = 0
     for row in reader:
+        if demo:
+            print "Searching For Matches in", row[1]
         matches = CompareSignature(sig_combined, row[0],
                                    score_func=scorefunc,
                                    demo=demo, T=T, N=num_returned)

@@ -204,6 +204,7 @@ def CompareSignature(sig1, sig2,
             print "Best match determined to be at", round(float(max_index/2)/29.97), "seconds into video."
         else:
             print "Not a match."
+    matches.sort()
 
     return matches[-N:]
 
