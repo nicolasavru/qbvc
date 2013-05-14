@@ -43,8 +43,6 @@ function to use for signature comparison, one of:
 * `cubic`
 * `mean-weighted`
 
-Currently the cubic scoring function is most effective.
-
 Appending "demo" as the last argument will print out some more numbers
 and some nice color-shift histograms.
 
@@ -52,7 +50,7 @@ and some nice color-shift histograms.
 1. Create a database file and add a video file to it:
 ```
 python2 qbvc.py database.db video1.mkv add
-```
+ ```
 
 Or, add a directory tree of files:
 ```
