@@ -35,9 +35,24 @@ def search(database, queryclip):
 
     dbfile.close()
 
-    print result[-num_returned:]
+    #print result[-num_returned:]
+    print_results(result[-num_returned:])
 
     return result
+
+def print_results(results, max_name_size=50):
+
+    i = 1
+    print "Rank\tVideo Name\t\t\t\t\t\tTime Into Video\t\tScore"
+    for result in results[::-1]:
+        vid_name = result[2]
+        if len(vid_name) > max_name_size:
+            vid_name = vid_name[0:max_name_size-3] + "..."
+        else:
+            vid_name += " " * (max_name_size-len(vid_name))
+        s = "%d\t%s\t%i Seconds\t\t%d\n" % (i,vid_name,round(result[1]),result[0])
+        print s
+        i+=1
 
 def add(database, queryclip):
     """
