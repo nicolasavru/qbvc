@@ -160,7 +160,7 @@ def SlideWindow(a, stepsize=1, width=3):
 
 def CompareSignature(sig1, sig2,
                      score_func=scorefuncs.MeanWeightedScoreFunction,
-                     demo=False, T=0, N=10):
+                     demo=False, N=10):
     """
     Compares sig1 and sig2. Returns a list of matches.
     """
@@ -189,8 +189,7 @@ def CompareSignature(sig1, sig2,
     for window in windows:
         window = np.asarray(window)
         scores[n] = np.sum(score_func(k*np.absolute(np.subtract(window,query_vid_sig)), qmean))
-        if scores[n] > T:
-            if round(float(max_index/2)/29.97) not in matches or scores[n] > matches[round(float(max_index/2)/29.97)]:
+        if round(float(max_index/2)/29.97) not in matches or scores[n] > matches[round(float(max_index/2)/29.97)]:
                 matches[round(float(max_index/2)/29.97)] = scores[n]
             # matches.append((scores[n], n))
 
@@ -202,10 +201,7 @@ def CompareSignature(sig1, sig2,
         n += 1
 
     if demo:
-        if max_score > T:
-            print "Best match determined to be at", round(float(max_index/2)/29.97), "seconds into video."
-        else:
-            print "Not a match."
+        print "Best match determined to be at", round(float(max_index/2)/29.97), "seconds into video."
 
     matcheslist = zip(matches.values(), matches.keys())
 

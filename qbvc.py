@@ -21,15 +21,13 @@ def search(database, queryclip):
     dbfile = open(database, 'r')
     reader = csv.reader(dbfile, delimiter=';')
     result = []
-    T = 0
     for row in reader:
         if demo:
             print "Searching For Matches in", row[1]
         matches = CompareSignature(sig_combined, row[0],
                                    score_func=scorefunc,
-                                   demo=demo, T=T, N=num_returned)
+                                   demo=demo, N=num_returned)
         if matches:
-            T = matches[0][0]
             cur_result = [(match[0], (match[1]/2.0)/29.976, row[1]) for match in matches]
             result = list(heapq.merge(result,cur_result))
 
